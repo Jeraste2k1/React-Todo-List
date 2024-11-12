@@ -1,0 +1,237 @@
+Je comprends que tu veux une explication détaillée pour bien saisir chaque partie du code. Voici une explication approfondie de chaque élément de `Todo.js` et `Todoitems.js` pour que tout te soit clair.
+
+---
+
+### Composant `Todo.js`
+
+Ce fichier gère le composant principal de l’application de liste de tâches (To-Do). Il contient l'interface pour ajouter des tâches, ainsi que la logique pour afficher, supprimer, compléter et éditer les tâches.
+
+1. **Imports**
+
+    ```javascript
+    import React, { useEffect, useRef, useState } from 'react'
+    import todo_icon from '../assets/todo_icon.png'
+    import Todoitems from './Todoitems'
+    ```
+
+    - `React` et les *hooks* `useEffect`, `useRef`, et `useState` sont importés de la bibliothèque React.
+    - `todo_icon` est importé pour afficher une icône de Todo au début de la liste.
+    - `Todoitems` est un autre composant importé pour gérer l’affichage individuel de chaque tâche.
+
+2. **Définition du Composant `Todo`**
+
+    ```javascript
+    const Todo = () => {
+    ```
+
+    `Todo` est une **fonction fléchée** qui définit le composant. Ce composant va contenir toute la logique et l’interface de la liste de tâches.
+
+3. **Déclaration des états et des références**
+
+    ```javascript
+    const inputRef = useRef()
+    const [todoList, setTodoList] = useState([])
+    ```
+
+    - `inputRef` utilise `useRef()` pour créer une référence vers le champ de texte. Cela nous permet d’accéder directement à la valeur de l’input sans avoir besoin d'un `onChange`.
+    - `todoList` et `setTodoList` sont créés avec `useState([])`. `todoList` est un tableau qui contiendra toutes les tâches, et `setTodoList` est une fonction pour mettre à jour ce tableau.
+
+4. **Fonction `ajout` pour ajouter une nouvelle tâche**
+
+    ```javascript
+    const ajout = () => {
+        const inputText = inputRef.current.value.trim()
+
+        if (inputText === "") {
+          return null
+        }
+
+        const newTodo = {
+          id: Date.now(),
+          text: inputText,
+          isComplete: false,
+        }
+        setTodoList((prev) => [...prev, newTodo])
+        inputRef.current.value = ""
+    }
+    ```
+
+    - `inputText` récupère la valeur actuelle de l’input et enlève les espaces inutiles grâce à `.trim()`.
+    - La condition `if (inputText === "") { return null }` arrête la fonction si l’input est vide.
+    - `newTodo` crée un objet représentant une nouvelle tâche avec :
+      - `id` : un identifiant unique basé sur la date actuelle (utile pour identifier chaque tâche).
+      - `text` : le texte de la tâche.
+      - `isComplete` : un indicateur pour savoir si la tâche est terminée (initialisé à `false`).
+    - `setTodoList((prev) => [...prev, newTodo])` : on ajoute `newTodo` à la liste existante (`prev` représente le tableau actuel de tâches).
+    - Enfin, `inputRef.current.value = ""` vide le champ de texte.
+
+5. **Fonction `deleteTodo` pour supprimer une tâche**
+
+    ```javascript
+    const deleteTodo = (id) => {
+        setTodoList((prevTodo) => prevTodo.filter((todo) => todo.id !== id))
+    }
+    ```
+
+    - `deleteTodo` prend `id` en paramètre, qui est l’identifiant de la tâche à supprimer.
+    - Elle utilise `setTodoList` pour mettre à jour `todoList`, en gardant seulement les tâches dont l'identifiant est différent de `id`.
+
+6. **Fonction `toggle` pour marquer une tâche comme complète ou non**
+
+    ```javascript
+    const toggle = (id) => {
+        setTodoList((prevTodo) =>
+          prevTodo.map((todo) =>
+            todo.id === id ? { ...todo, isComplete: !todo.isComplete } : todo
+          )
+        )
+    }
+    ```
+
+    - `toggle` prend `id` en paramètre et met à jour l’état de la tâche (complète ou non).
+    - La méthode `.map()` parcourt chaque tâche. Si `todo.id` correspond à l'`id` donné, `isComplete` est inversé (`!todo.isComplete`), sinon la tâche reste inchangée.
+
+7. **Fonction `editTodo` pour modifier le texte d'une tâche**
+
+    ```javascript
+    const editTodo = (id, newText) => {
+        setTodoList((prevTodo) =>
+          prevTodo.map((todo) =>
+            todo.id === id ? { ...todo, text: newText } : todo
+          )
+        )
+    }
+    ```
+
+    - `editTodo` prend en paramètres `id` et `newText` (le nouveau texte de la tâche).
+    - Elle utilise `map` pour modifier uniquement la tâche ayant le `id` correspondant, en mettant à jour son `text` avec `newText`.
+
+8. **Utilisation de `useEffect` pour suivre les changements**
+
+    ```javascript
+    useEffect(() => {
+        console.log(todoList)
+    }, [todoList])
+    ```
+
+    - `useEffect` affiche `todoList` dans la console chaque fois que la liste change. Cela peut être utile pour le débogage.
+
+9. **Structure JSX du composant**
+
+    ```javascript
+    return (
+        <div className='...'>
+            {/* Titre */}
+            <div className='...'>
+              <img ... src={todo_icon} alt="" />
+              <h1 ...> Todo List</h1>
+            </div>
+
+            {/* Input pour ajouter une tâche */}
+            <div className='...'>
+              <input ref={inputRef} ... type="text" placeholder='Ajouter votre Tâche' />
+              <button onClick={ajout} ...> Ajouter </button>
+            </div>
+
+            {/* Affichage de la liste */}
+            <div>
+              {todoList.map((item) => (
+                <Todoitems
+                  key={item.id}
+                  text={item.text}
+                  id={item.id}
+                  isComplete={item.isComplete}
+                  deleteTodo={deleteTodo}
+                  toggle={toggle}
+                  editTodo={editTodo}
+                />
+              ))}
+            </div>
+        </div>
+    )
+    ```
+
+    - La `div` principale contient l’interface utilisateur : le titre, le champ d'ajout et la liste des tâches.
+    - `todoList.map(...)` utilise `Todoitems` pour afficher chaque tâche individuellement, en lui passant les informations nécessaires.
+
+---
+
+### Composant `Todoitems.js`
+
+`Todoitems` est un composant enfant de `Todo`. Il gère chaque tâche individuellement et permet de l’afficher, la marquer comme complète, la modifier et la supprimer.
+
+1. **Imports et déclaration du composant**
+
+    ```javascript
+    import React, { useState } from 'react'
+    import tick from '../assets/tick.png'
+    import not_tick from '../assets/not_tick.png'
+    import delete_icon from '../assets/delete.png'
+
+    const Todoitems = ({ text, id, isComplete, deleteTodo, toggle, editTodo }) => {
+    ```
+
+    - `Todoitems` utilise `useState` et importe les icônes pour l’affichage.
+    - `Todoitems` reçoit plusieurs propriétés : `text`, `id`, `isComplete`, `deleteTodo`, `toggle`, et `editTodo`.
+
+2. **État `isEditing` et `editText`**
+
+    ```javascript
+    const [isEditing, setIsEditing] = useState(false)
+    const [editText, setEditText] = useState(text)
+    ```
+
+    - `isEditing` gère si la tâche est en mode édition ou non.
+    - `editText` contient le texte de la tâche lors de l’édition.
+
+3. **Gestion de l’édition**
+
+    ```javascript
+    const handleEditChange = (e) => {
+        setEditText(e.target.value)
+    }
+
+    const saveEdit = () => {
+        editTodo(id, editText)
+        setIsEditing(false)
+    }
+    ```
+
+    - `handleEditChange` met à jour `editText` à chaque modification de l’input.
+    - `saveEdit` enregistre le texte mis à jour en appelant `editTodo`, puis désactive le mode édition.
+
+4. **Structure JSX**
+
+    ```javascript
+    return (
+        <div className='flex items-center my-3 gap-2'>
+            <div onClick={() => !isEditing && toggle(id)} className='flex flex-1 items-center cursor-pointer'>
+                <img src={isComplete ? tick : not_tick} alt="" />
+                {isEditing ? (
+                    <input type="text" value={editText} onChange={handleEditChange} ... />
+                ) : (
+                    <p className={`... ${isComplete ? "line-through" : ""}`}>
+                        {text}
+                    </p>
+                )}
+            </div>
+            {isEditing ? (
+                <button onClick={saveEdit} className='text-blue-600'>Enregistrer</button>
+            ) : (
+                <button onClick={() => setIsEditing(true)} className='text-blue-600'>Éditer</button>
+            )}
+            <img onClick={() => deleteTodo(id)} ... src={
+
+delete_icon} alt="" />
+        </div>
+    )
+    ```
+
+    - Un `div` principal gère l’affichage et les interactions :
+      - Si `isEditing` est `true`, un champ de texte et un bouton `Enregistrer` apparaissent.
+      - Si `isEditing` est `false`, on voit le texte de la tâche (barré si `isComplete` est `true`).
+    - Enfin, l'icône de suppression (`delete_icon`) supprime la tâche lorsqu’on clique dessus.
+
+---
+
+Avec ces explications, tu devrais avoir une bonne compréhension de ce qui se passe dans chaque partie de ton code !
